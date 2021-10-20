@@ -10,38 +10,27 @@
 		#newVal {
 			padding: 5px;
 		}
+		#blocker {
+			padding:  -10px;
+			margin:  -10px;
+			height: 100000px;
+			width: 100000px;
+			top:  -100px;
+			left:  -100px;
+			background-color: black;
+			z-index: 100;
+		}
 	</style>
 </head>
 <body>
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script src="./libs/jscolor/jscolor.min.js"></script>
-	<script src="./libs/js-live-color-transformation/src/live-colors.js"></script>
+	<div id="blocker"></div>
 	<script>
-		jscolor.presets.default = {
-			palette: [
-				'#000000', 
-				'#7d7d7d', 
-				'#870014', 
-				'#ec1c23', 
-				'#ff7e26', 
-				'#fef100', 
-				'#22b14b', 
-				'#00a1e7', 
-				'#3f47cc', 
-				'#a349a4', 
-				'#ffffff', 
-				'#c3c3c3', 
-				'#b87957', 
-				'#feaec9', 
-				'#ffc80d', 
-				'#eee3af', 
-				'#b5e61d', 
-				'#99d9ea', 
-				'#7092be', 
-				'#c8bfe7',
-			],
-		}
+		setTimeout(function(){
+			document.getElementById("blocker").remove();
+		},2000)
 	</script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="./libs/js-live-color-transformation/src/live-colors.js"></script>
 	
 	<div>
 		<span>Value: 
@@ -55,8 +44,10 @@
 
 	<div>
 		<span>Color: 
-			<input id="colorChanger" value="#ACACAC" data-jscolor="{}">
-			<input id="allowColorChange" type="checkbox" unchecked>
+			<input type="color" id="colorChanger" name="colorChanger" value="#ACACAC">
+			<span><input id="allowColorChange" type="checkbox" unchecked> Update</span>
+			<span><input id="lockColor" type="checkbox" unchecked> Lock</span>
+			
 		</span>
 	</div>
 
@@ -69,18 +60,11 @@
 	var livecolors = new LiveColorsEngine;
 
 
-
-
-	function updateBackground(HEX) {
-		livecolors.animateBackground( document.body, livecolors.hex(HEX) )
-		// document.body.style.background = ;
-	}
-
 	var palette = document.getElementById("colorChanger")
 	var pullbackground = true;
 	var backgroundValMoved = false
 	palette.oninput = function(){
-		updateBackground(palette.value)
+		document.body.style.background = palette.value;
 		pullbackground = false;
 		backgroundValMoved = true;
 	}
@@ -93,50 +77,11 @@
 
 </script>
 <script>
-	// main loop
-
-	var targetDiv = document.getElementById("target");
-
-	var config = null;
-	var refreshTime = 1000;
-
-	function refresh() {
-		jQuery.get('./config.json', function(data) {
-			config = data;
-			console.log(data);
-
-
-			targetDiv.innerText = config.value
-			
-			if (typeof config.refreshTime != "undefined") 
-				refreshTime = config.refresh;
-			
-			if (!refreshTime) 
-				refresh();
-
-			if (pullbackground) { 
-				if(!backgroundValMoved) 
-					palette.value = config.color; 
-
-				updateBackground(config.color)
-			};
-
-		});
-		if(refreshTime) {
-			setTimeout(refresh, refreshTime);
-		}
-		
-	}
-
-	refresh();
-
-</script>
-<script>
 	// submit
-
+	var newValDiv = document.getElementById("newVal");
 	document.getElementById("submit").onclick = function(){
 
-		var newvalue = document.getElementById("newVal").value
+		var newvalue = newValDiv.value
 		if( newvalue.length > 250 ) { alert("content is too long"); return; } 
 
 		let newconfig = config; 
@@ -165,5 +110,55 @@
 	
 
 </script>
+<script>
+	// main loop
+
+	var targetDiv = document.getElementById("target");
+		
+
+		newValueEntered = false;
+		newValDiv.oninput = function(){
+			newValueEntered = true;
+		}
+		newValDiv.oninput = function(){
+			newValueEntered = true;
+		}
+
+	var config = null;
+	var refreshTime = 1000;
+
+	function refresh() {
+		jQuery.get('./config.json', function(data) {
+			config = data;
+			console.log(data);
+
+
+			targetDiv.innerText = config.value
+			if (!newValueEntered) newValDiv.value = config.value;
+			
+			if (typeof config.refreshTime != "undefined") 
+				refreshTime = config.refresh;
+			
+			if (!refreshTime) 
+				refresh();
+
+			if (pullbackground) { 
+				if(!backgroundValMoved) 
+					palette.value = config.color; 
+
+				livecolors.animateBackground( document.body, livecolors.hex(config.color) );
+			};
+
+		});
+		if(refreshTime) {
+			setTimeout(refresh, refreshTime);
+		}
+		
+	}
+
+	refresh();
+
+</script>
+
 </body>
 </html>
